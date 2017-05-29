@@ -28,11 +28,11 @@ namespace SteamBot
             Console.WriteLine("Ctrl + C to quit the program");
 
             Console.Write("Username: ");
-            user_name = Console.ReadLine();
-
+            //user_name = Console.ReadLine();
+            user_name = "";
             Console.Write("Password: ");
-            user_password = Console.ReadLine();
-
+            //user_password = Console.ReadLine();
+            user_password = "";
             SteamLogIn();
         }
         static void SteamLogIn()
@@ -77,7 +77,7 @@ namespace SteamBot
                 isRunning = false;
                 return;
             }
-            Console.WriteLine("Connected to Steam. \nLogging in...\n");
+            Console.WriteLine("Connected to Steam. \nLogging in '{0}'...\n",user_name);
             byte[] sentryHash = null;
 
             if (File.Exists("sentry.bin"))
@@ -94,6 +94,13 @@ namespace SteamBot
               TwoFactorCode = twofactor,
               SentryFileHash = sentryHash,
             });
+        }
+        static void OnDisconnected(SteamClient.DisconnectedCallback callback)
+        {
+            Console.WriteLine("\n{0} Disconnected From Steam, Reconnecting In 5 Seconds...\n", user_name);
+            Thread.Sleep(TimeSpan.FromSeconds(5));
+
+            steamClient.Connect();
         }
         static void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
@@ -121,8 +128,10 @@ namespace SteamBot
             }
 
             Console.WriteLine("Sucessfully log in {0}", callback.Result);
-            Console.ReadKey();
-            Environment.Exit(0);
+        }
+        static void OnLoggedOff(SteamUser.LoggedOffCallback callback)
+        {
+            Console.WriteLine("Logged off of Steam: {0}", callback.Result);
         }
         static void UpdateMachineAuthCallback(SteamUser.UpdateMachineAuthCallback callback)
         {
@@ -153,15 +162,11 @@ namespace SteamBot
         }
         static void OnChatMessage(SteamFriends.FriendMsgCallback callback)
         {
-            if(callback.EntryType == EChatEntryType.ChatMsg)
-                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello!");
+            String senderName = steamFriends.GetFriendPersonaName(callback.Sender);
+            Console.WriteLine("Sender's id :{0} , display name : {1}", callback.Sender, senderName);
+            if (callback.EntryType == EChatEntryType.ChatMsg)
+                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello! "+ senderName);
         }
-        static void OnDisconnected(SteamClient.DisconnectedCallback callback)
-        {
-            Console.WriteLine("\n{0} Disconnected From Steam, Reconnecting In 5 Seconds...\n", user_name);
-            Thread.Sleep(TimeSpan.FromSeconds(5));
-
-            steamClient.Connect();
-        }
+        
     }
 }
