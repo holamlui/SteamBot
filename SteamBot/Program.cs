@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SteamKit2;
+using SteamKit2.Internal;
 using System.Configuration;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 
 namespace SteamBot
@@ -28,11 +30,11 @@ namespace SteamBot
             Console.WriteLine("Ctrl + C to quit the program");
 
             Console.Write("Username: ");
-            //user_name = Console.ReadLine();
-            user_name = "";
+            user_name = Console.ReadLine();
+            
             Console.Write("Password: ");
-            //user_password = Console.ReadLine();
-            user_password = "";
+            user_password = Console.ReadLine();
+            
             SteamLogIn();
         }
         static void SteamLogIn()
@@ -159,13 +161,26 @@ namespace SteamBot
         {
             steamFriends.SetPersonaState(EPersonaState.Online);
             Console.WriteLine("Set PersonaState to Online");
+            var playGame = new ClientMsgProtobuf<CMsgClientGamesPlayed>(EMsg.ClientGamesPlayed);
+
+            playGame.Body.games_played.Add(new CMsgClientGamesPlayed.GamePlayed
+            {
+                game_id = new GameID(218620), // or game_id = APPID (218620=Payday2),
+            });
+
+            // send it off
+            // notice here we're sending this message directly using the SteamClient
+            steamClient.Send(playGame);
+
+            // delay a little to give steam some time to establish a GC connection to us
+            Thread.Sleep(5000);
         }
         static void OnChatMessage(SteamFriends.FriendMsgCallback callback)
         {
             String senderName = steamFriends.GetFriendPersonaName(callback.Sender);
             Console.WriteLine("Sender's id :{0} , display name : {1}", callback.Sender, senderName);
             if (callback.EntryType == EChatEntryType.ChatMsg)
-                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello! "+ senderName);
+                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello! "+ senderName);        
         }
         
     }
