@@ -31,10 +31,10 @@ namespace SteamBot
 
             Console.Write("Username: ");
             user_name = Console.ReadLine();
-            
+           
             Console.Write("Password: ");
             user_password = Console.ReadLine();
-            
+        
             SteamLogIn();
         }
         static void SteamLogIn()
@@ -52,7 +52,7 @@ namespace SteamBot
             callbackManager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
 
             callbackManager.Subscribe<SteamFriends.FriendMsgCallback>(OnChatMessage);
-          
+            callbackManager.Subscribe<SteamFriends.FriendsListCallback>(OnFriendList);
             /*new Callback<SteamClient.ConnectedCallback>(OnConnected, callbackManager);
             new Callback<SteamUser.LoggedOnCallback>(OnLoggedOn, callbackManager);
             new Callback<SteamUser.UpdateMachineAuthCallback>(UpdateMachineAuthCallback, callbackManager);
@@ -161,6 +161,71 @@ namespace SteamBot
         {
             steamFriends.SetPersonaState(EPersonaState.Online);
             Console.WriteLine("Set PersonaState to Online");
+            //.SetPersonaName("⚡ Thunderbolt");           
+        }
+        static void OnChatMessage(SteamFriends.FriendMsgCallback callback)
+        {
+            String senderName = steamFriends.GetFriendPersonaName(callback.Sender);
+            if (callback.EntryType == EChatEntryType.ChatMsg)
+            {
+                Console.WriteLine(senderName + " : " +callback.Message);           
+                if (callback.Message.Length > 1)
+                {
+                    if (callback.Message.Remove(1) == "!")//if message starts with !
+                    {
+                        String command = callback.Message;
+                        switch (command)
+                        {
+                            case "!help":
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!help    : List function of commands");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!hello   : Say hello to me");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!myid    : Show your Steam id");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!payday  : Make me play payday2");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!reset   : Reset status to Online");
+                                break;
+                            case "!hello":
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, ":steamhappy: Hello! " + senderName);
+                                break;
+                            case "!myid":
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Your id is: "+  callback.Sender.ConvertToUInt64());
+                                break;
+                            case "!payday":
+                                PlayGame();
+                                break;
+                            case "!reset":
+                                NoGame();
+                                break;
+                            default:
+                                break;
+                        }             
+                    }
+                    else // message not start with "!"
+                    {
+                        steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Please use !help for help");
+                    }
+                }
+                else //only send one char
+                {
+                    steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Please use !help for help");
+                }          
+            }
+        }       
+        static void OnFriendList(SteamFriends.FriendsListCallback callback)
+        {
+            Thread.Sleep(3000);
+            foreach(var friend in callback.FriendList)
+            {
+                if(friend.Relationship == EFriendRelationship.RequestRecipient)
+                {
+                    steamFriends.AddFriend(friend.SteamID);
+                    Console.WriteLine("Accepted friend request of " + steamFriends.GetFriendPersonaName(friend.SteamID));
+                    Thread.Sleep(500);
+                    steamFriends.SendChatMessage(friend.SteamID, EChatEntryType.ChatMsg, "Nice to meet you! I am a steam bot");
+                }
+            }
+        }
+        static void PlayGame()
+        {
             var playGame = new ClientMsgProtobuf<CMsgClientGamesPlayed>(EMsg.ClientGamesPlayed);
 
             playGame.Body.games_played.Add(new CMsgClientGamesPlayed.GamePlayed
@@ -175,13 +240,21 @@ namespace SteamBot
             // delay a little to give steam some time to establish a GC connection to us
             Thread.Sleep(5000);
         }
-        static void OnChatMessage(SteamFriends.FriendMsgCallback callback)
+        static void NoGame()
         {
-            String senderName = steamFriends.GetFriendPersonaName(callback.Sender);
-            Console.WriteLine("Sender's id :{0} , display name : {1}", callback.Sender, senderName);
-            if (callback.EntryType == EChatEntryType.ChatMsg)
-                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello! "+ senderName);        
+            var playGame = new ClientMsgProtobuf<CMsgClientGamesPlayed>(EMsg.ClientGamesPlayed);
+
+            playGame.Body.games_played.Add(new CMsgClientGamesPlayed.GamePlayed
+            {
+                //game_id = new GameID(218620), // or game_id = APPID (218620=Payday2),
+            });
+
+            // send it off
+            // notice here we're sending this message directly using the SteamClient
+            steamClient.Send(playGame);
+
+            // delay a little to give steam some time to establish a GC connection to us
+            Thread.Sleep(5000);
         }
-        
     }
 }
