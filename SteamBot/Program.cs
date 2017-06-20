@@ -184,7 +184,7 @@ namespace SteamBot
                                 steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!reset   : Reset status to Online");
                                 break;
                             case "!hello":
-                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, ":steamhappy: Hello! " + senderName);
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello! " + senderName);
                                 break;
                             case "!myid":
                                 steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Your id is: "+  callback.Sender.ConvertToUInt64());
