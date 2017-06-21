@@ -31,10 +31,11 @@ namespace SteamBot
 
             Console.Write("Username: ");
             user_name = Console.ReadLine();
-           
+            
+
             Console.Write("Password: ");
             user_password = Console.ReadLine();
-        
+            
             SteamLogIn();
         }
         static void SteamLogIn()
@@ -177,25 +178,52 @@ namespace SteamBot
                         switch (command)
                         {
                             case "!help":
-                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!help    : List function of commands");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!help    : List of general commands");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!help2   : List of status commands");
                                 steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!hello   : Say hello to me");
-                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!myid    : Show your Steam id");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!myid    : Show your Steam id");    
+                                break;
+                            case "!help2":
+                                //Set status commands// Will combine into a single command with parameters in future
                                 steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!payday  : Make me play payday2");
-                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!reset   : Reset status to Online");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!nogame  : Leave game");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!away    : Set status to Away");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!busy    : Set status to busy");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!snooze  : Set status to Snooze");
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "!online  : Set status to Online");
+                                
                                 break;
                             case "!hello":
                                 steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Hello! " + senderName);
                                 break;
-                            case "!myid":
-                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Your id is: "+  callback.Sender.ConvertToUInt64());
-                                break;
                             case "!payday":
                                 PlayGame();
                                 break;
-                            case "!reset":
+                            case "!nogame":
                                 NoGame();
                                 break;
+                            case "!away":
+                                steamFriends.SetPersonaState(EPersonaState.Away);
+                                break;
+                            case "!busy":
+                                steamFriends.SetPersonaState(EPersonaState.Busy);         
+                                break;
+                            case "!snooze":
+                                steamFriends.SetPersonaState(EPersonaState.Snooze);
+                                break;
+                            case "!online":
+                                steamFriends.SetPersonaState(EPersonaState.Online);
+                                break;
+                            case "!offline": //Only offline, not logoff, still able to read commands
+                                steamFriends.SetPersonaState(EPersonaState.Offline);
+                                break;
+
+                            case "!myid":
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Your id is: "+  callback.Sender.ConvertToUInt64());
+                                break;
+                            
                             default:
+                                steamFriends.SendChatMessage(callback.Sender, EChatEntryType.ChatMsg, "Please use !help for help");
                                 break;
                         }             
                     }
